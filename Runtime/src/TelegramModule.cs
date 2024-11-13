@@ -13,12 +13,14 @@ namespace RGN.Modules.Telegram
         
         public override void Init()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
             if (RGNCore.I.Dependencies.EngineApp is IEngineAppOpenUrlPatcher patcher)
             {
                 patcher.PatchOpenUrl(TelegramJavascriptBridge.OpenLink);
             }
             
             EmailSignInModule.I.PatchSignInWithDeviceCodeFunction(SignInWithDeviceCodeAsync);
+#endif
             
             _initParams = TelegramJavascriptBridge.GetInitParams();
         }

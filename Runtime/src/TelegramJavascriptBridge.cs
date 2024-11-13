@@ -23,7 +23,7 @@ namespace RGN.Modules.Telegram
         {
             try
             {
-                string rawInitParams = string.Empty;
+                string rawInitParams = "{}";
 #if UNITY_WEBGL && !UNITY_EDITOR
                 rawInitParams = PLAY_GetInitParamsJs();
 #endif
