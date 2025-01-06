@@ -1,10 +1,10 @@
 {
-    "name": "GetReady.RGN.Telegram.Editor",
+    "name": "Play.Unity.Telegram.Runtime",
     "rootNamespace": "",
-    "references": [],
-    "includePlatforms": [
-        "Editor"
+    "references": [
+        "Play.Unity.SignIn.Email.Runtime"
     ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
