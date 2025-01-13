@@ -1,5 +1,5 @@
 ﻿{
-  "name": "io.play.unity.telegram",
+  "name": "network.theplay.unity.telegram",
   "displayName": "PLAY SDK. Telegram",
   "version": "0.16.0",
   "unity": "2020.3",
@@ -30,7 +30,7 @@
   ],
   "samples": [],
   "dependencies": {
-    "io.play.unity.core": "0.16.0",
-    "io.play.unity.signin.email": "0.16.0"
+    "network.theplay.unity.core": "0.16.0",
+    "network.theplay.unity.signin.email": "0.16.0"
   }
 }
