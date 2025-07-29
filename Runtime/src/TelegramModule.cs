@@ -13,7 +13,7 @@ namespace RGN.Modules.Telegram
         
         public override void Init()
         {
-            if (!TelegramJavascriptBridge.IsTelegramAvailable())
+            if (!IsAvailable())
             {
                 return;
             }
@@ -28,6 +28,11 @@ namespace RGN.Modules.Telegram
 #endif
             
             _initParams = TelegramJavascriptBridge.GetInitParams();
+        }
+        
+        public bool IsAvailable()
+        {
+            return TelegramJavascriptBridge.IsTelegramAvailable();
         }
 
         public async Task<ISignInWithDeviceCodeIntent> SignInWithDeviceCodeAsync(CancellationToken cancellationToken = default)
