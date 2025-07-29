@@ -1,12 +1,16 @@
-﻿using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 using RGN.Modules.SignIn.DeviceFlow;
+using UnityEngine;
 
 namespace RGN.Modules.Telegram
 {
     [Attributes.GeneratorExclude]
     public class TelegramModule : BaseModule<TelegramModule>, IRGNModule
     {
+        private TelegramMessageReceiver _messageReceiver;
+        
         public TelegramInitParams InitParams { get; private set; }
         
         public override void Init()
@@ -15,6 +19,10 @@ namespace RGN.Modules.Telegram
             {
                 return;
             }
+
+            GameObject messageReceiverObj = new GameObject(nameof(TelegramMessageReceiver));
+            _messageReceiver = messageReceiverObj.AddComponent<TelegramMessageReceiver>();
+            Object.DontDestroyOnLoad(messageReceiverObj);
             
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (RGNCore.I.Dependencies.EngineApp is ImplDependencies.Engine.IEngineAppOpenUrlPatcher patcher)
@@ -32,9 +40,56 @@ namespace RGN.Modules.Telegram
         
         public bool IsFullscreen() => TelegramJavascriptBridge.IsFullscreen();
 
-        public void RequestFullscreen() => TelegramJavascriptBridge.RequestFullscreen();
+        [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
+        public void RequestFullscreen(System.Action<bool> callback = null)
+        {
+            System.Action onChanged = null;
+            System.Action<string> onFailed = null;
 
-        public void ExitFullscreen() => TelegramJavascriptBridge.ExitFullscreen();
+            onChanged = () =>
+            {
+                _messageReceiver.OnFullscreenChanged -= onChanged;
+                _messageReceiver.OnFullscreenFailed -= onFailed;
+                callback?.Invoke(true);
+            };
+            onFailed = error =>
+            {
+                _messageReceiver.OnFullscreenChanged -= onChanged;
+                _messageReceiver.OnFullscreenFailed -= onFailed;
+                callback?.Invoke(false);
+            };
+
+            _messageReceiver.OnFullscreenChanged += onChanged;
+            _messageReceiver.OnFullscreenFailed += onFailed;
+
+            TelegramJavascriptBridge.RequestFullscreen();
+        }
+
+        [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
+        public void ExitFullscreen(System.Action<bool> callback = null)
+        {
+            System.Action onChanged = null;
+            System.Action<string> onFailed = null;
+
+            onChanged = () =>
+            {
+                _messageReceiver.OnFullscreenChanged -= onChanged;
+                _messageReceiver.OnFullscreenFailed -= onFailed;
+                callback?.Invoke(true);
+            };
+            
+            onFailed = error =>
+            {
+                _messageReceiver.OnFullscreenChanged -= onChanged;
+                _messageReceiver.OnFullscreenFailed -= onFailed;
+                callback?.Invoke(false);
+            };
+
+            _messageReceiver.OnFullscreenChanged += onChanged;
+            _messageReceiver.OnFullscreenFailed += onFailed;
+            
+            TelegramJavascriptBridge.ExitFullscreen();
+        }
 
         public async Task<ISignInWithDeviceCodeIntent> SignInWithDeviceCodeAsync(CancellationToken cancellationToken = default)
         {

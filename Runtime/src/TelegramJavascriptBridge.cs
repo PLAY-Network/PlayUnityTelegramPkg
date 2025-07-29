@@ -20,7 +20,6 @@ namespace RGN.Modules.Telegram
         private static extern void PLAY_TelegramRequestFullscreenJs();
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_TelegramExitFullscreenJs();
-        
 #endif
 
         public static bool IsTelegramAvailable()

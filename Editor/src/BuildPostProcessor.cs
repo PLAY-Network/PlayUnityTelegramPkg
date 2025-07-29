@@ -36,7 +36,17 @@ namespace RGN.Modules.Telegram.Editor
 <script src=""https://telegram.org/js/telegram-web-app.js""></script> 
 <script> 
   if (window.Telegram && window.Telegram.WebApp) { 
-    window.Telegram.WebApp.onEvent(""viewportChanged"", () => window.scrollTo(0, 0)); 
+    window.Telegram.WebApp.onEvent(""viewportChanged"", () => window.scrollTo(0, 0));
+    window.Telegram.WebApp.onEvent(""fullscreenChanged"", () => {
+      if (unityInstance) {
+        unityInstance.SendMessage(""TelegramMessageReceiver"", ""FullscreenChangedMessage"");
+      }
+    });
+    window.Telegram.WebApp.onEvent(""fullscreenFailed"", (event) => {
+      if (unityInstance) {
+        unityInstance.SendMessage(""TelegramMessageReceiver"", ""FullscreenFailedMessage"", event.error);
+      }
+    });
   }
 </script>";
             
