@@ -11,8 +11,8 @@ namespace RGN.Modules.Telegram.Editor
     {
         public int callbackOrder => 9999999;
 
-        private const string TELEGRAM_SCRIPT_URL = "https://telegram.org/js/telegram-web-app.js";
-        private const string TELEGRAM_EVENT_HANDLER_ID = "telegram-event-handlers";
+        private const string TelegramScriptURL = "https://telegram.org/js/telegram-web-app.js";
+        private const string TelegramEventHandlerID = "telegram-event-handlers";
 
         public void OnPostprocessBuild(BuildReport report)
         {
@@ -29,71 +29,104 @@ namespace RGN.Modules.Telegram.Editor
             }
 
             string indexContent = System.IO.File.ReadAllText(indexPath);
+            string modifiedContent = indexContent;
             
-            bool hasTelegramScript = Regex.IsMatch(indexContent, @"<script[^>]*src\s*=\s*[""']" + Regex.Escape(TELEGRAM_SCRIPT_URL) + @"[""'][^>]*>");
-            bool hasTelegramEventHandlers = indexContent.Contains(TELEGRAM_EVENT_HANDLER_ID);
-            
-            Match bodyOpenMatch = Regex.Match(indexContent, "<body[^>]*>");
-            Match bodyCloseMatch = Regex.Match(indexContent, @"(\s*)</body>");
-            
-            if (!bodyOpenMatch.Success || !bodyCloseMatch.Success)
+            Match bodyCloseMatch = Regex.Match(modifiedContent, @"(\s*)</body>");
+            if (!bodyCloseMatch.Success)
             {
-                Debug.LogError("Failed to find body tags in index.html");
+                Debug.LogError("Failed to find closing body tag in index.html");
                 return;
             }
             
-            string modifiedContent = indexContent;
+            // Step 1: Check if Telegram script exists
+            bool hasTelegramScript = Regex.IsMatch(indexContent, @"<script[^>]*src\s*=\s*[""']" + Regex.Escape(TelegramScriptURL) + @"[""'][^>]*>");
+            int telegramScriptPosition;
             
-            if (!hasTelegramScript)
+            if (hasTelegramScript)
             {
-                int insertPos = bodyOpenMatch.Index + bodyOpenMatch.Length;
-                string indent = GetIndentation(indexContent, bodyOpenMatch.Index) + "  ";
-                string[] codeLines = {
+                Match scriptMatch = Regex.Match(modifiedContent, @"<script[^>]*src\s*=\s*[""']" + Regex.Escape(TelegramScriptURL) + @"[""'][^>]*>.*?</script>");
+                telegramScriptPosition = scriptMatch.Index + scriptMatch.Length;
+            }
+            else
+            {
+                int scriptInsertPos = bodyCloseMatch.Index;
+                string scriptIndentation = RemoveCRLF(bodyCloseMatch.Groups[1].Value + "  ");
+                string[] scriptLines = {
                     "<!-- Telegram Web App Script -->",
-                    $"<script src=\"{TELEGRAM_SCRIPT_URL}\"></script>"
+                    $"<script src=\"{TelegramScriptURL}\"></script>"
                 };
-                string codeToInsert = FormatLines(codeLines, indent);
-                modifiedContent = modifiedContent.Insert(insertPos, codeToInsert);
-                bodyCloseMatch = Regex.Match(modifiedContent, @"(\s*)</body>");
+                string scriptToInsert = FormatLines(scriptLines, scriptIndentation);
+                modifiedContent = modifiedContent.Insert(scriptInsertPos, scriptToInsert);
+                telegramScriptPosition = scriptInsertPos + scriptToInsert.LastIndexOf("</script>", StringComparison.Ordinal) + "</script>".Length;
             }
             
-            if (!hasTelegramEventHandlers)
+            // Step 2: Handle event handlers - remove old and add new one
+            Match handlersMatch = Regex.Match(modifiedContent, $@"<script[^>]*id\s*=\s*[""]?{TelegramEventHandlerID}[""]?[^>]*>[\s\S]*?</script>");
+            if (handlersMatch.Success)
             {
-                int insertPos = bodyCloseMatch.Index;
-                string indent = bodyCloseMatch.Groups[1].Value + "  ";
-                string[] codeLines = {
-                    "<!-- Telegram Event Handlers -->",
-                    $"<script id=\"{TELEGRAM_EVENT_HANDLER_ID}\">",
-                    "  if (window.Telegram && window.Telegram.WebApp) {",
-                    "    window.Telegram.WebApp.onEvent(\"viewportChanged\", () => window.scrollTo(0, 0));",
-                    "    window.Telegram.WebApp.onEvent(\"fullscreenChanged\", () => {",
-                    "      if (unityInstance) {",
-                    "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenChangedMessage\");",
-                    "      }",
-                    "    });",
-                    "    window.Telegram.WebApp.onEvent(\"fullscreenFailed\", (event) => {",
-                    "      if (unityInstance) {",
-                    "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenFailedMessage\", event.error);",
-                    "      }",
-                    "    });",
-                    "  }",
-                    "</script>"
-                };
-                string handlersToInsert = FormatLines(codeLines, indent);
-                modifiedContent = modifiedContent.Insert(insertPos, handlersToInsert);
+                modifiedContent = modifiedContent.Remove(handlersMatch.Index, handlersMatch.Length);
+                
+                if (telegramScriptPosition > handlersMatch.Index)
+                {
+                    telegramScriptPosition -= handlersMatch.Length;
+                }
             }
+            
+            string handlersIndentation = RemoveCRLF(GetIndentationAtPosition(modifiedContent, telegramScriptPosition));
+            string[] handlersLines = {
+                "<!-- Telegram Event Handlers -->",
+                $"<script id=\"{TelegramEventHandlerID}\">",
+                "  if (window.Telegram && window.Telegram.WebApp) {",
+                "    window.Telegram.WebApp.onEvent(\"viewportChanged\", () => window.scrollTo(0, 0));",
+                "    window.Telegram.WebApp.onEvent(\"fullscreenChanged\", () => {",
+                "      if (unityInstance) {",
+                "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenChangedMessage\");",
+                "      }",
+                "    });",
+                "    window.Telegram.WebApp.onEvent(\"fullscreenFailed\", (event) => {",
+                "      if (unityInstance) {",
+                "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenFailedMessage\", event.error);",
+                "      }",
+                "    });",
+                "  }",
+                "</script>"
+            };
+            string handlersToInsert = FormatLines(handlersLines, handlersIndentation);
+            modifiedContent = modifiedContent.Insert(telegramScriptPosition, handlersToInsert);
             
             if (modifiedContent != indexContent)
             {
                 System.IO.File.WriteAllText(indexPath, modifiedContent);
                 Debug.Log("Successfully updated index.html with Telegram integration");
             }
-            else
-            {
-                Debug.Log("Telegram script and event handlers are already present in index.html");
-            }
         }
         
+        private string GetIndentationAtPosition(string content, int position)
+        {
+            int lineStart = content.LastIndexOf('\n', position);
+            if (lineStart < 0)
+            {
+                lineStart = 0;
+            }
+            else
+            {
+                lineStart++;
+            }
+            
+            int lineEnd = Math.Min(position, content.IndexOf('\n', lineStart));
+            if (lineEnd < 0)
+            {
+                lineEnd = content.Length;
+            }
+            
+            string line = content.Substring(lineStart, lineEnd - lineStart);
+            return Regex.Match(line, @"^\s*").Value;
+        }
+        
+        private string RemoveCRLF(string indentation) => string.IsNullOrEmpty(indentation) 
+            ? string.Empty 
+            : Regex.Replace(indentation, @"[\r\n]+", string.Empty);
+
         private string FormatLines(string[] lines, string indentation)
         {
             if (lines == null || lines.Length == 0)
@@ -116,30 +149,6 @@ namespace RGN.Modules.Telegram.Editor
             }
             
             return sb.ToString();
-        }
-        
-        private string GetIndentation(string content, int position)
-        {
-            int lineStart = content.LastIndexOf('\n', position);
-            if (lineStart < 0)
-            {
-                lineStart = 0;
-            }
-            else
-            {
-                lineStart++;
-            }
-            
-            int lineEnd = content.IndexOf('\n', lineStart);
-            if (lineEnd < 0)
-            {
-                lineEnd = content.Length;
-            }
-            
-            string line = content.Substring(lineStart, Math.Min(position - lineStart, lineEnd - lineStart));
-            Match indentMatch = Regex.Match(line, @"^\s*");
-            
-            return indentMatch.Value;
         }
     }
 }
