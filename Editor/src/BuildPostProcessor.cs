@@ -46,43 +46,41 @@ namespace RGN.Modules.Telegram.Editor
             
             if (!hasTelegramScript)
             {
-                int insertPosition = bodyOpenMatch.Index + bodyOpenMatch.Length;
-                string parentIndent = GetIndentation(indexContent, bodyOpenMatch.Index);
-                string indent = parentIndent + "  ";
-                
-                string scriptToInsert = $@"
-{indent}<!-- Telegram Web App Script -->
-{indent}<script src=""{TELEGRAM_SCRIPT_URL}""></script>";
-                
-                modifiedContent = modifiedContent.Insert(insertPosition, scriptToInsert);
+                int insertPos = bodyOpenMatch.Index + bodyOpenMatch.Length;
+                string indent = GetIndentation(indexContent, bodyOpenMatch.Index) + "  ";
+                string[] codeLines = {
+                    "<!-- Telegram Web App Script -->",
+                    $"<script src=\"{TELEGRAM_SCRIPT_URL}\"></script>"
+                };
+                string codeToInsert = FormatLines(codeLines, indent);
+                modifiedContent = modifiedContent.Insert(insertPos, codeToInsert);
                 bodyCloseMatch = Regex.Match(modifiedContent, @"(\s*)</body>");
             }
             
             if (!hasTelegramEventHandlers)
             {
-                int insertPosition = bodyCloseMatch.Index;
-                string parentIndent = bodyCloseMatch.Groups[1].Value;
-                string indent = parentIndent + "  ";
-                
-                string handlersToInsert = $@"
-{indent}<!-- Telegram Event Handlers -->
-{indent}<script id=""{TELEGRAM_EVENT_HANDLER_ID}"">
-{indent}  if (window.Telegram && window.Telegram.WebApp) {{
-{indent}    window.Telegram.WebApp.onEvent(""viewportChanged"", () => window.scrollTo(0, 0));
-{indent}    window.Telegram.WebApp.onEvent(""fullscreenChanged"", () => {{
-{indent}      if (unityInstance) {{
-{indent}        unityInstance.SendMessage(""TelegramMessageReceiver"", ""FullscreenChangedMessage"");
-{indent}      }}
-{indent}    }});
-{indent}    window.Telegram.WebApp.onEvent(""fullscreenFailed"", (event) => {{
-{indent}      if (unityInstance) {{
-{indent}        unityInstance.SendMessage(""TelegramMessageReceiver"", ""FullscreenFailedMessage"", event.error);
-{indent}      }}
-{indent}    }});
-{indent}  }}
-{indent}</script>";
-                
-                modifiedContent = modifiedContent.Insert(insertPosition, handlersToInsert);
+                int insertPos = bodyCloseMatch.Index;
+                string indent = bodyCloseMatch.Groups[1].Value + "  ";
+                string[] codeLines = {
+                    "<!-- Telegram Event Handlers -->",
+                    $"<script id=\"{TELEGRAM_EVENT_HANDLER_ID}\">",
+                    "  if (window.Telegram && window.Telegram.WebApp) {",
+                    "    window.Telegram.WebApp.onEvent(\"viewportChanged\", () => window.scrollTo(0, 0));",
+                    "    window.Telegram.WebApp.onEvent(\"fullscreenChanged\", () => {",
+                    "      if (unityInstance) {",
+                    "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenChangedMessage\");",
+                    "      }",
+                    "    });",
+                    "    window.Telegram.WebApp.onEvent(\"fullscreenFailed\", (event) => {",
+                    "      if (unityInstance) {",
+                    "        unityInstance.SendMessage(\"TelegramMessageReceiver\", \"FullscreenFailedMessage\", event.error);",
+                    "      }",
+                    "    });",
+                    "  }",
+                    "</script>"
+                };
+                string handlersToInsert = FormatLines(codeLines, indent);
+                modifiedContent = modifiedContent.Insert(insertPos, handlersToInsert);
             }
             
             if (modifiedContent != indexContent)
@@ -96,14 +94,47 @@ namespace RGN.Modules.Telegram.Editor
             }
         }
         
+        private string FormatLines(string[] lines, string indentation)
+        {
+            if (lines == null || lines.Length == 0)
+            {
+                return string.Empty;
+            }
+                
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(Environment.NewLine);
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                sb.Append(indentation);
+                sb.Append(lines[i]);
+                
+                if (i < lines.Length - 1)
+                {
+                    sb.Append(Environment.NewLine);
+                }
+            }
+            
+            return sb.ToString();
+        }
+        
         private string GetIndentation(string content, int position)
         {
             int lineStart = content.LastIndexOf('\n', position);
-            if (lineStart < 0) lineStart = 0;
-            else lineStart++;
+            if (lineStart < 0)
+            {
+                lineStart = 0;
+            }
+            else
+            {
+                lineStart++;
+            }
             
             int lineEnd = content.IndexOf('\n', lineStart);
-            if (lineEnd < 0) lineEnd = content.Length;
+            if (lineEnd < 0)
+            {
+                lineEnd = content.Length;
+            }
             
             string line = content.Substring(lineStart, Math.Min(position - lineStart, lineEnd - lineStart));
             Match indentMatch = Regex.Match(line, @"^\s*");
