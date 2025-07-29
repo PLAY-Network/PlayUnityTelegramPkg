@@ -5,21 +5,36 @@ namespace RGN.Modules.Telegram
 {
     internal static class TelegramJavascriptBridge
     {
-#if UNITY_WEBGL && !UNITY_EDITOR || true
+#if UNITY_WEBGL && !UNITY_EDITOR
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern int PLAY_IsTelegramAvailableJs();
 
         [System.Runtime.InteropServices.DllImport("__Internal")]
-        private static extern string PLAY_GetInitParamsJs();
+        private static extern string PLAY_GetTelegramInitParamsJs();
 
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenLinkJs(string url);
 
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenTelegramLinkJs(string url);
+        
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        private static extern int PLAY_TelegramIsFullscreenJs();
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        private static extern void PLAY_TelegramRequestFullscreenJs();
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        private static extern void PLAY_TelegramExitFullscreenJs();
+        
 #endif
 
-        public static bool IsTelegramAvailable() => PLAY_IsTelegramAvailableJs() != 0;
+        public static bool IsTelegramAvailable()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return PLAY_IsTelegramAvailableJs() != 0;
+#else
+            return false;
+#endif
+        }
 
         public static TelegramInitParams GetInitParams()
         {
@@ -27,7 +42,7 @@ namespace RGN.Modules.Telegram
             {
                 string rawInitParams = "{}";
 #if UNITY_WEBGL && !UNITY_EDITOR
-                rawInitParams = PLAY_GetInitParamsJs();
+                rawInitParams = PLAY_GetTelegramInitParamsJs();
 #endif
                 IDictionary<string, object> initParamsJson = RGNCoreBuilder.I.Dependencies.Json
                     .FromJsonAsDictionary(rawInitParams);
@@ -141,6 +156,33 @@ namespace RGN.Modules.Telegram
             {
                 Debug.LogError($"[TelegramSdkJs]: Failed to open telegram link: {e.Message}");
             }
+        }
+
+        public static bool IsFullscreenSupported()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return PLAY_TelegramIsFullscreenJs() != 0;
+#else
+            return false;
+#endif
+        }
+
+        public static void RequestFullscreen()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            PLAY_TelegramRequestFullscreenJs();
+#else
+            Debug.LogWarning("[TelegramSdkJs]: RequestFullscreen is not supported on this platform.");
+#endif
+        }
+
+        public static void ExitFullscreen()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            PLAY_TelegramExitFullscreenJs();
+#else
+            Debug.LogWarning("[TelegramSdkJs]: ExitFullscreen is not supported on this platform.");
+#endif
         }
     }
 }

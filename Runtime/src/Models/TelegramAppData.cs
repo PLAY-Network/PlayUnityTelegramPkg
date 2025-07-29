@@ -1,6 +1,6 @@
 namespace RGN.Modules.Telegram
 {
-    internal class TelegramAppData
+    public class TelegramAppData
     {
         public TelegramUserData User;
         public long ChatInstance;

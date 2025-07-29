@@ -1,6 +1,6 @@
 ﻿namespace RGN.Modules.Telegram
 {
-    internal class TelegramInitParams
+    public class TelegramInitParams
     {
         public TelegramAppData AppData;
         public string AppVersion;

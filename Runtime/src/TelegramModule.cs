@@ -1,7 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using RGN.ImplDependencies.Engine;
-using RGN.Modules.SignIn;
 using RGN.Modules.SignIn.DeviceFlow;
 
 namespace RGN.Modules.Telegram
@@ -9,7 +7,7 @@ namespace RGN.Modules.Telegram
     [Attributes.GeneratorExclude]
     public class TelegramModule : BaseModule<TelegramModule>, IRGNModule
     {
-        private TelegramInitParams _initParams;
+        public TelegramInitParams InitParams { get; private set; }
         
         public override void Init()
         {
@@ -19,26 +17,29 @@ namespace RGN.Modules.Telegram
             }
             
 #if UNITY_WEBGL && !UNITY_EDITOR
-            if (RGNCore.I.Dependencies.EngineApp is IEngineAppOpenUrlPatcher patcher)
+            if (RGNCore.I.Dependencies.EngineApp is ImplDependencies.Engine.IEngineAppOpenUrlPatcher patcher)
             {
                 patcher.PatchOpenUrl(TelegramJavascriptBridge.OpenLink);
             }
             
-            EmailSignInModule.I.PatchSignInWithDeviceCodeFunction(SignInWithDeviceCodeAsync);
+            RGN.Modules.SignIn.EmailSignInModule.I.PatchSignInWithDeviceCodeFunction(SignInWithDeviceCodeAsync);
 #endif
             
-            _initParams = TelegramJavascriptBridge.GetInitParams();
+            InitParams = TelegramJavascriptBridge.GetInitParams();
         }
         
-        public bool IsAvailable()
-        {
-            return TelegramJavascriptBridge.IsTelegramAvailable();
-        }
+        public bool IsAvailable() => TelegramJavascriptBridge.IsTelegramAvailable();
+        
+        public static bool IsFullscreenSupported() => TelegramJavascriptBridge.IsFullscreenSupported();
+
+        public static void RequestFullscreen() => TelegramJavascriptBridge.RequestFullscreen();
+
+        public static void ExitFullscreen() => TelegramJavascriptBridge.ExitFullscreen();
 
         public async Task<ISignInWithDeviceCodeIntent> SignInWithDeviceCodeAsync(CancellationToken cancellationToken = default)
         {
             SignInWithDeviceCodeIntent signInWithDeviceCodeIntent = new SignInWithDeviceCodeIntent(_rgnCore);
-            if (_initParams.AppPlatform == "web" || _initParams.AppPlatform == "weba")
+            if (InitParams.AppPlatform == "web" || InitParams.AppPlatform == "weba")
             {
                 signInWithDeviceCodeIntent.SetImmediateMode(true);
                 await signInWithDeviceCodeIntent.RequestDeviceCodeAsync(cancellationToken);

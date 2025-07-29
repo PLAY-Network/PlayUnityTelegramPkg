@@ -10,7 +10,7 @@ mergeInto(LibraryManager.library, {
     return 0;
   },
     
-  PLAY_GetInitParamsJs: function() {
+  PLAY_GetTelegramInitParamsJs: function() {
     let initParams;
     try {
       const tgInitParams = window.Telegram.WebView.initParams;
@@ -77,6 +77,34 @@ mergeInto(LibraryManager.library, {
     } catch (error) {
       console.error("Error while opening Telegram link: ", error);
       window.open(url);
+    }
+  },
+  
+  PLAY_TelegramIsFullscreenJs: function() {
+    try {
+      const telegram = window.Telegram.WebApp;
+      return telegram.isFullscreen ? 1 : 0;
+    } catch (error) {
+      console.error("Error while checking Telegram fullscreen state: ", error);
+      return 0;
+    }
+  },
+
+  PLAY_TelegramRequestFullscreenJs: function() {
+    try {
+      const telegram = window.Telegram.WebApp;
+      telegram.requestFullscreen();
+    } catch (error) {
+      console.error("Error while requesting Telegram fullscreen: ", error);
+    }
+  },
+  
+  PLAY_TelegramExitFullscreenJs: function() {
+    try {
+      const telegram = window.Telegram.WebApp;
+      telegram.exitFullscreen();
+    } catch (error) {
+      console.error("Error while exiting Telegram fullscreen: ", error);
     }
   },
 });
