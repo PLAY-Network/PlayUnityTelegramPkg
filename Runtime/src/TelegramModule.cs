@@ -30,7 +30,7 @@ namespace RGN.Modules.Telegram
         
         public bool IsAvailable() => TelegramJavascriptBridge.IsTelegramAvailable();
         
-        public bool IsFullscreenSupported() => TelegramJavascriptBridge.IsFullscreenSupported();
+        public bool IsFullscreen() => TelegramJavascriptBridge.IsFullscreen();
 
         public void RequestFullscreen() => TelegramJavascriptBridge.RequestFullscreen();
 

@@ -8,16 +8,12 @@ namespace RGN.Modules.Telegram
 #if UNITY_WEBGL && !UNITY_EDITOR
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern int PLAY_IsTelegramAvailableJs();
-
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern string PLAY_GetTelegramInitParamsJs();
-
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenLinkJs(string url);
-
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenTelegramLinkJs(string url);
-        
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern int PLAY_TelegramIsFullscreenJs();
         [System.Runtime.InteropServices.DllImport("__Internal")]
@@ -158,7 +154,7 @@ namespace RGN.Modules.Telegram
             }
         }
 
-        public static bool IsFullscreenSupported()
+        public static bool IsFullscreen()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             return PLAY_TelegramIsFullscreenJs() != 0;
