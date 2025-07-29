@@ -30,11 +30,11 @@ namespace RGN.Modules.Telegram
         
         public bool IsAvailable() => TelegramJavascriptBridge.IsTelegramAvailable();
         
-        public static bool IsFullscreenSupported() => TelegramJavascriptBridge.IsFullscreenSupported();
+        public bool IsFullscreenSupported() => TelegramJavascriptBridge.IsFullscreenSupported();
 
-        public static void RequestFullscreen() => TelegramJavascriptBridge.RequestFullscreen();
+        public void RequestFullscreen() => TelegramJavascriptBridge.RequestFullscreen();
 
-        public static void ExitFullscreen() => TelegramJavascriptBridge.ExitFullscreen();
+        public void ExitFullscreen() => TelegramJavascriptBridge.ExitFullscreen();
 
         public async Task<ISignInWithDeviceCodeIntent> SignInWithDeviceCodeAsync(CancellationToken cancellationToken = default)
         {
