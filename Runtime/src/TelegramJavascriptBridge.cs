@@ -1,23 +1,25 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_WEBGL && !UNITY_EDITOR
-using System.Runtime.InteropServices;
-#endif
 
 namespace RGN.Modules.Telegram
 {
     internal static class TelegramJavascriptBridge
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")]
+#if UNITY_WEBGL && !UNITY_EDITOR || true
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        private static extern int PLAY_IsTelegramAvailableJs();
+
+        [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern string PLAY_GetInitParamsJs();
 
-        [DllImport("__Internal")]
+        [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenLinkJs(string url);
 
-        [DllImport("__Internal")]
+        [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void PLAY_OpenTelegramLinkJs(string url);
 #endif
+
+        public static bool IsTelegramAvailable() => PLAY_IsTelegramAvailableJs() != 0;
 
         public static TelegramInitParams GetInitParams()
         {

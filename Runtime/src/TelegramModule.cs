@@ -13,6 +13,11 @@ namespace RGN.Modules.Telegram
         
         public override void Init()
         {
+            if (!TelegramJavascriptBridge.IsTelegramAvailable())
+            {
+                return;
+            }
+            
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (RGNCore.I.Dependencies.EngineApp is IEngineAppOpenUrlPatcher patcher)
             {

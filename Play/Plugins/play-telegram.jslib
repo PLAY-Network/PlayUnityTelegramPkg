@@ -1,4 +1,15 @@
 mergeInto(LibraryManager.library, {
+  PLAY_IsTelegramAvailableJs: function() {
+    try {
+      if (window.Telegram && window.Telegram.WebApp) {
+        return 1;
+      }
+    } catch (error) {
+      console.error("Error while checking Telegram availability: ", error);
+    }
+    return 0;
+  },
+    
   PLAY_GetInitParamsJs: function() {
     let initParams;
     try {
