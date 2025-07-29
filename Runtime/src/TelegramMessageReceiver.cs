@@ -7,6 +7,11 @@ namespace RGN.Modules.Telegram
         public event System.Action OnFullscreenChanged;
         public event System.Action<string> OnFullscreenFailed;
 
+        private void Start()
+        {
+            Debug.Log("[TelegramMessageReceiver] Start");
+        }
+
         private void FullscreenChangedMessage()
         {
             OnFullscreenChanged?.Invoke();
