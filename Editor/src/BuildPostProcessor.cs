@@ -52,7 +52,6 @@ namespace RGN.Modules.Telegram.Editor
                 int scriptInsertPos = bodyCloseMatch.Index;
                 string scriptIndentation = RemoveCRLF(bodyCloseMatch.Groups[1].Value + "  ");
                 string[] scriptLines = {
-                    "<!-- Telegram Web App Script -->",
                     $"<script src=\"{TelegramScriptURL}\"></script>"
                 };
                 string scriptToInsert = FormatLines(scriptLines, scriptIndentation);
@@ -74,7 +73,6 @@ namespace RGN.Modules.Telegram.Editor
             
             string handlersIndentation = RemoveCRLF(GetIndentationAtPosition(modifiedContent, telegramScriptPosition));
             string[] handlersLines = {
-                "<!-- Telegram Event Handlers -->",
                 $"<script id=\"{TelegramEventHandlerID}\">",
                 "  if (window.Telegram && window.Telegram.WebApp) {",
                 "    window.Telegram.WebApp.onEvent(\"viewportChanged\", () => window.scrollTo(0, 0));",
@@ -103,23 +101,17 @@ namespace RGN.Modules.Telegram.Editor
         
         private string GetIndentationAtPosition(string content, int position)
         {
-            int lineStart = content.LastIndexOf('\n', position);
-            if (lineStart < 0)
+            position = Math.Min(position, content.Length);
+            
+            int lineStart = content.LastIndexOf('\n', Math.Max(0, position - 1));
+            lineStart = lineStart + 1;
+            
+            if (lineStart > position)
             {
-                lineStart = 0;
-            }
-            else
-            {
-                lineStart++;
+                lineStart = Math.Max(0, position);
             }
             
-            int lineEnd = Math.Min(position, content.IndexOf('\n', lineStart));
-            if (lineEnd < 0)
-            {
-                lineEnd = content.Length;
-            }
-            
-            string line = content.Substring(lineStart, lineEnd - lineStart);
+            string line = content.Substring(lineStart, position - lineStart);
             return Regex.Match(line, @"^\s*").Value;
         }
         
